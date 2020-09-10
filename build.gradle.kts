@@ -7,6 +7,7 @@
  */
 
 plugins {
+    id("com.gradle.plugin-publish").version("0.12.0")
     // Apply the Java Gradle plugin development plugin to add support for developing Gradle plugins
     `java-gradle-plugin`
 }
@@ -31,5 +32,18 @@ gradlePlugin {
     }
 }
 
-val check by tasks.getting(Task::class) {
+// The configuration example below shows the minimum required properties
+// configured to publish your plugin to the plugin portal
+pluginBundle {
+    website = "https://github.com/bennofs/gradle-continuous-exec"
+    vcsUrl = "https://github.com/bennofs/gradle-continuous-exec"
+    description = "Plugin for spawning daemon processes in continuous builds"
+    tags = listOf("continuous", "exec", "process", "daemon")
+
+    (plugins) {
+        "continuousExec" {
+            // id is captured from java-gradle-plugin configuration
+            displayName = "Gradle Greeting plugin"
+        }
+    }
 }
