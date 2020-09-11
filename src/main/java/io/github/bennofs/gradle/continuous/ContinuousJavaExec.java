@@ -1,12 +1,11 @@
 package io.github.bennofs.gradle.continuous;
 
-import groovy.lang.Closure;
 import org.gradle.api.Action;
-import org.gradle.api.tasks.Input;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.Nested;
 import org.gradle.deployment.internal.DeploymentRegistry;
-import org.gradle.process.JavaExecSpec;
 
 import javax.inject.Inject;
 
@@ -15,38 +14,38 @@ import javax.inject.Inject;
  * See base class for more information.
  */
 public class ContinuousJavaExec extends AbstractContinuousExec {
-    private Action<? super JavaExecSpec> javaExec;
+    private final JavaExec javaExec;
 
     @Inject
-    public ContinuousJavaExec(DeploymentRegistry deploymentRegistry) {
+    public ContinuousJavaExec(ObjectFactory objectFactory, DeploymentRegistry deploymentRegistry) {
         super(deploymentRegistry);
+        javaExec = objectFactory.newInstance(JavaExec.class);
     }
 
     @Override
     @Internal
     Action<? super ContinuousExecSpec> getExecAction() {
-        return continuousExecSpec -> getProject().javaexec(spec -> {
-            spec.setStandardInput(continuousExecSpec.getInputStream());
-            spec.setStandardOutput(continuousExecSpec.getOutputStream());
-            javaExec.execute(spec);
-        });
+        return continuousExecSpec -> {
+            javaExec.setStandardInput(continuousExecSpec.getInputStream());
+            javaExec.setStandardOutput(continuousExecSpec.getOutputStream());
+            javaExec.exec();
+        };
     }
 
-    @Input
-    public Action<? super JavaExecSpec> getJavaExec() {
+    /**
+     * @return The exec task to start the daemon.
+     */
+    @Nested
+    public JavaExec getJavaExec() {
         return javaExec;
     }
 
     /**
-     * Configure options for launching the java process.
+     * Configures options for the forked process.
      *
-     * @param javaExec action to configure the java exec spec
+     * @param configure Action to configure the process
      */
-    public void javaExec(Action<? super JavaExecSpec> javaExec) {
-        this.javaExec = javaExec;
-    }
-
-    public void javaExec(Closure<JavaExecSpec> javaExec) {
-        this.javaExec = javaExec::call;
+    public void javaExec(Action<? super JavaExec> configure) {
+        configure.execute(this.javaExec);
     }
 }

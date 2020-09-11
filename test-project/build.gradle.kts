@@ -30,7 +30,6 @@ tasks.register<io.github.bennofs.gradle.continuous.ContinuousJavaExec>("example"
 
     watch.from("build/example-trigger")
     watch.from(createDirTask)
-    dependsOn(sourceSets["main"].getCompileTaskName("java"))
 }
 
 sourceSets["main"].runtimeClasspath.forEach {
