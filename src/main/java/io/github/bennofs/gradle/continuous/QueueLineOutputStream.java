@@ -37,6 +37,8 @@ public class QueueLineOutputStream extends OutputStream {
             currentLine = ByteBuffer.allocate(64);
             return;
         }
+        if (currentLine.hasRemaining()) return;
+
         final ByteBuffer newAlloc = ByteBuffer.allocate((int)(currentLine.capacity() * 1.5));
         this.currentLine.flip();
         newAlloc.put(this.currentLine);
