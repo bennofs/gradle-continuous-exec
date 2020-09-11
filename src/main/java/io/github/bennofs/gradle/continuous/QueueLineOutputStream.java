@@ -21,7 +21,8 @@ public class QueueLineOutputStream extends OutputStream {
     public void write(int i) throws IOException {
         final byte b = (byte)(i & 0xff);
         if (b == '\n') {
-            commandQueue.add(StandardCharsets.UTF_8.decode(currentLine.flip()).toString());
+            currentLine.flip();
+            commandQueue.add(StandardCharsets.UTF_8.decode(currentLine).toString());
             currentLine.position(0);
             currentLine.limit(currentLine.capacity());
             return;
