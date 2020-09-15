@@ -26,10 +26,10 @@ dependencies {
 
 gradlePlugin {
     // Define the plugin
-    plugins.creating {
+    plugins.create("continuousExec") {
         id = "io.github.bennofs.continuous-exec"
         implementationClass = "io.github.bennofs.gradle.continuous.ContinuousExecPlugin"
-        version = "0.0.3"
+        version = "0.1.0"
     }
 }
 

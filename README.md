@@ -9,7 +9,7 @@ To use this plugin, add the following to your `build.gradle.kts`:
 
 ```kotlin
 plugins {
-    id("io.github.bennofs.continuous-exec").version("0.0.3")
+    id("io.github.bennofs.continuous-exec").version("0.1.0")
 }
 ```
 

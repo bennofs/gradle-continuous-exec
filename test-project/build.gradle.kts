@@ -1,6 +1,6 @@
 plugins {
     java
-    id("io.github.bennofs.continuous-exec").version("0.0.1")
+    id("io.github.bennofs.continuous-exec").version("+")
 }
 
 dependencies {

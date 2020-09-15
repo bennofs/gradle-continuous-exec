@@ -37,7 +37,8 @@ public class ContinuousDeploymentHandle implements DeploymentHandle {
 
     @Override
     public void start(Deployment deployment) {
-        System.err.println("START");
+        LOGGER.info("continuous run task start");
+
         this.runner = new Runner(this.execAction);
         this.runner.start();
         try {
@@ -50,7 +51,6 @@ public class ContinuousDeploymentHandle implements DeploymentHandle {
 
     @Override
     public void stop() {
-        System.out.println("stop deployment");
         if (this.runner != null) {
             this.runner.interrupt();
             try {
