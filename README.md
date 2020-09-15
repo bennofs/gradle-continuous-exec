@@ -1,27 +1,21 @@
+# continuous-exec gradle plugin
+
+A plugin for gradle to spawn persistent daemon processes in a continuous build. 
+The daemon processes receive notifications when files change.
+
+## Usage
+
+To use this plugin, add the following to your `build.gradle.kts`:
+
+```kotlin
 plugins {
-    java
-    id("io.github.bennofs.continuous-exec").version("0.0.1")
+    id("io.github.bennofs.continuous-exec").version("0.0.3")
 }
+```
 
-dependencies {
-    implementation("org.json:json:20200518")
-}
+You can then define continuous java exec tasks:
 
-repositories {
-    // Use jcenter for resolving your dependencies.
-    // You can declare any Maven/Ivy/file repository here.
-    mavenCentral()
-    jcenter()
-    maven { url = uri("https://jitpack.io") }
-}
-
-val createDirTask by tasks.register("create-dir") {
-    outputs.dir("build/example-dir")
-    doLast {
-        mkdir("build/example-dir")
-    }
-}
-
+```kotlin
 tasks.register<io.github.bennofs.gradle.continuous.ContinuousJavaExec>("example") {
     /* here, all options from JavaExec are supported */
     javaExec {
@@ -36,10 +30,6 @@ tasks.register<io.github.bennofs.gradle.continuous.ContinuousJavaExec>("example"
     watch.from("build/example-trigger")
     watch.from(createDirTask)
 }
+```
 
-sourceSets["main"].runtimeClasspath.forEach {
-    println(it.toString())
-}
-
-
-
+See the files in `test-project/` for a full working example.

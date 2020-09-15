@@ -43,6 +43,9 @@ public class ContinuousJavaExec extends AbstractContinuousExec {
     /**
      * Configures options for the forked process.
      *
+     * The process is expected to communicate with the build via stdin/stdout.
+     * See {@link ContinuousExecSpec} for a description of the protocol.
+     *
      * @param configure Action to configure the process
      */
     public void javaExec(Action<? super JavaExec> configure) {

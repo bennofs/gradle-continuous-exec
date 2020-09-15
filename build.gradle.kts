@@ -10,7 +10,7 @@ plugins {
     id("com.gradle.plugin-publish").version("0.12.0")
     // Apply the Java Gradle plugin development plugin to add support for developing Gradle plugins
     `java-gradle-plugin`
-    `maven`
+    maven
 }
 
 repositories {
@@ -26,10 +26,10 @@ dependencies {
 
 gradlePlugin {
     // Define the plugin
-    val continuousExec by plugins.creating {
+    plugins.creating {
         id = "io.github.bennofs.continuous-exec"
         implementationClass = "io.github.bennofs.gradle.continuous.ContinuousExecPlugin"
-        version = "0.0.1"
+        version = "0.0.3"
     }
 }
 
@@ -41,10 +41,10 @@ pluginBundle {
     description = "Plugin for spawning daemon processes in continuous builds"
     tags = listOf("continuous", "exec", "process", "daemon")
 
-    (plugins) {
-        "continuousExec" {
+    plugins {
+        named("continuousExec") {
             // id is captured from java-gradle-plugin configuration
-            displayName = "Gradle Greeting plugin"
+            displayName = "Gradle Continuous Exec plugin"
         }
     }
 }

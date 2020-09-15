@@ -3,6 +3,7 @@ package io.github.bennofs.gradle.continuous;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.TaskAction;
@@ -19,11 +20,7 @@ import java.util.ArrayList;
  * in a continuous build.
  *
  * The task starts a process in the background. The process the communicates over a simple protocol via stdin and stdout.
- * After finishing start up, the process must write the line "ok" (without quotes) to stdout.
- *
- * Whenever a change is detected in the task dependencies or watched files,
- * a line consisting of the null-separated full paths of changed files is written to the process.
- * The process should then respond with a line "ok" (without quotes).
+ * For a description of the wire protocol, see {@link ContinuousExecSpec}.
  *
  * Subclasses specify how to spawn the process. See for example {@link ContinuousJavaExec} for spawning a java task.
  */
@@ -59,9 +56,23 @@ public abstract class AbstractContinuousExec extends DefaultTask {
         if (handle == null) {
             final ContinuousDeploymentHandle deployed = deploymentRegistry.start(
                     deploymentId, DeploymentRegistry.ChangeBehavior.NONE, ContinuousDeploymentHandle.class, getExecAction());
+
+            getProject().getGradle().buildFinished(buildResult -> {
+                try {
+                    deployed.buildFinished(buildResult);
+                } catch (InterruptedException ignored) {
+                }
+            });
         } else {
             final ArrayList<FileChange> watchChanges = new ArrayList<>();
             changes.getFileChanges(watch).forEach(watchChanges::add);
+
+            getProject().getGradle().buildFinished(buildResult -> {
+                try {
+                    handle.buildFinished(buildResult);
+                } catch (InterruptedException ignored) {
+                }
+            });
             handle.reload(watchChanges);
         }
     }

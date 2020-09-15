@@ -1,5 +1,6 @@
 package io.github.bennofs.gradle.continuous;
 
+import org.gradle.BuildResult;
 import org.gradle.api.Action;
 import org.gradle.deployment.internal.Deployment;
 import org.gradle.deployment.internal.DeploymentHandle;
@@ -9,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.util.Collection;
+import java.util.Optional;
 import java.util.concurrent.SynchronousQueue;
 import java.util.stream.Collectors;
 
@@ -61,7 +63,21 @@ public class ContinuousDeploymentHandle implements DeploymentHandle {
 
     public void reload(Collection<FileChange> changes) throws InterruptedException {
         LOGGER.info("continuous run task reload");
-        runner.sendRequest(changes.stream().map(FileChange::getNormalizedPath).collect(Collectors.joining("\0")));
+
+        final String paths = changes.stream()
+                .map(FileChange::getNormalizedPath)
+                .map(ContinuousDeploymentHandle::makeJsonString)
+                .collect(Collectors.joining(","));
+
+        runner.sendRequest("{\"command\":\"changed\",\"paths\": [" + paths + "]}");
+    }
+
+    public void buildFinished(BuildResult buildResult) throws InterruptedException {
+        final String optionalFailed = Optional.ofNullable(buildResult.getFailure())
+                .map(failure -> "," + "\"failure\":" + makeJsonString(failure.toString()))
+                .orElse("");
+
+        runner.sendRequest("{\"command\":\"buildFinished\"" + optionalFailed + "}");
     }
 
     private static class Runner extends Thread {
@@ -81,8 +97,8 @@ public class ContinuousDeploymentHandle implements DeploymentHandle {
 
         public void waitForOk() throws InterruptedException {
             String r = responseQueue.take();
-            if (!r.equals("ok")) {
-                throw new RuntimeException("invalid response from continuous exec process, expected ok but got: " + r);
+            if (!r.equals("{}")) {
+                throw new RuntimeException("invalid response from continuous exec process, expected {} but got: " + r);
             }
         }
 
@@ -101,6 +117,23 @@ public class ContinuousDeploymentHandle implements DeploymentHandle {
                 throw e;
             }
         }
+    }
+
+
+    private static String makeJsonString(final String input){
+        final StringBuilder result = new StringBuilder();
+        input.chars().forEach(chr -> {
+            // leave common ascii characters unescaped
+            if (chr > 0x1f && chr < 0x7f && chr != '\\' && chr != '"') {
+                result.append((char)chr);
+                return;
+            }
+
+            // escape everything else using unicode escape
+            result.append(String.format("\\u%x", chr));
+        });
+
+        return "\"" + result.toString() + "\"";
     }
 
 
