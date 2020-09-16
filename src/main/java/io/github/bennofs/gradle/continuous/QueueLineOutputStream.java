@@ -1,5 +1,8 @@
 package io.github.bennofs.gradle.continuous;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.nio.ByteBuffer;
@@ -10,6 +13,8 @@ import java.util.concurrent.BlockingQueue;
  * An OutputStream that streams complete lines to a queue.
  */
 public class QueueLineOutputStream extends OutputStream {
+    private static final Logger LOGGER = LoggerFactory.getLogger(QueueLineOutputStream.class);
+
     private final BlockingQueue<String> commandQueue;
     private ByteBuffer currentLine;
 
@@ -22,7 +27,13 @@ public class QueueLineOutputStream extends OutputStream {
         final byte b = (byte)(i & 0xff);
         if (b == '\n') {
             currentLine.flip();
-            commandQueue.add(StandardCharsets.UTF_8.decode(currentLine).toString());
+            final String line = StandardCharsets.UTF_8.decode(currentLine).toString();
+            LOGGER.debug("received line from continuous worker: {}", line);
+            try {
+                commandQueue.put(line);
+            } catch (InterruptedException e) {
+                throw new IOException("queue put interrupted", e);
+            }
             currentLine.position(0);
             currentLine.limit(currentLine.capacity());
             return;

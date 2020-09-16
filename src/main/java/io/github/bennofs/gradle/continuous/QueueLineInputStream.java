@@ -1,5 +1,8 @@
 package io.github.bennofs.gradle.continuous;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,6 +14,8 @@ import java.util.concurrent.BlockingQueue;
  * An InputStream that returns lines from a queue.
  */
 public class QueueLineInputStream extends InputStream implements Closeable {
+    private static final Logger LOGGER = LoggerFactory.getLogger(QueueLineInputStream.class);
+
     private boolean closed = false;
     private final BlockingQueue<String> commandQueue;
     private ByteBuffer currentLine;
@@ -47,7 +52,9 @@ public class QueueLineInputStream extends InputStream implements Closeable {
     private void ensureLine() throws IOException {
         if (currentLine != null && currentLine.hasRemaining()) return;
         try {
-            currentLine = StandardCharsets.UTF_8.encode(commandQueue.take() + "\n");
+            final String line = commandQueue.take();
+            LOGGER.debug("sending line to worker: {}", line);
+            currentLine = StandardCharsets.UTF_8.encode(line + "\n");
         } catch (InterruptedException e) {
             throw new IOException("queue take interrupted", e);
         }
